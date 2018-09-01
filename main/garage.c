@@ -59,8 +59,6 @@ static void wifi_init() {
 }
 
 const int GPIO_LED = 2;
-const int GPIO_SENSOR_CLOSED = 0;
-bool led_on = false;
 //bool garage_open = false;
 static garage_state_t garage_target = GARAGE_OPEN;
 static garage_state_t garage_current = GARAGE_OPEN;
@@ -84,7 +82,7 @@ void led_identify_task(void *_args) {
         vTaskDelay(250 / portTICK_PERIOD_MS);
     }
 
-    led_write(led_on);
+    led_write(false);
 
     vTaskDelete(NULL);
 }
@@ -142,7 +140,6 @@ void garage_target_set(homekit_value_t value) {
       printf("%s: Unknown value %i\n", __func__, value.int_value);
       break;
     }
-    //    led_write(led_on);    
 }
 
 
@@ -160,21 +157,12 @@ homekit_accessory_t *accessories[] = {
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
             HOMEKIT_CHARACTERISTIC(NAME, "Garage Controller"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "PAO"),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "4820AF5839B2"),
+            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "4820AF5839B3"),
             HOMEKIT_CHARACTERISTIC(MODEL, "Pro"),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.2"),
+            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.3"),
             HOMEKIT_CHARACTERISTIC(IDENTIFY, garage_identify),
             NULL
         }),
-	  /*        HOMEKIT_SERVICE(LIGHTBULB, .primary=true, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Sample LED"),
-            HOMEKIT_CHARACTERISTIC(
-                ON, false,
-                .getter=led_on_get,
-                .setter=led_on_set
-            ),
-            NULL
-	    }),*/
 	  HOMEKIT_SERVICE(GARAGE_DOOR_OPENER, .primary=true, .characteristics=(homekit_characteristic_t*[]){
 	        HOMEKIT_CHARACTERISTIC(NAME, "Garage"),
 		  &c_current_door_state,
@@ -207,7 +195,6 @@ void app_main(void) {
 
     //    printf("Calling wifi init\n");
     wifi_init();
-    printf("Calling garage init\n");
     garage_init();
     garage_set_state_callback(garage_state_callback);
 }
