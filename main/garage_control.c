@@ -83,6 +83,7 @@ void garage_init(void) {
 
 void garage_set_state_callback(garage_state_callback_t fn) {
   garage_state_callback = fn;
+  if (garage_state_callback) garage_state_callback(current_state, target_state);
 }
 
 garage_state_t garage_get_current_state(void) {
