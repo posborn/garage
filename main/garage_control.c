@@ -25,6 +25,7 @@ static void stuck_timer_callback(void* arg);
 
 static garage_state_t last_good_state = 0;
 static garage_state_t current_state = GARAGE_OPEN;
+static garage_state_t target_state = GARAGE_OPEN;
 static garage_state_callback_t garage_state_callback = NULL;
 
 const static esp_timer_create_args_t control_pin_timer_args = {
@@ -57,22 +58,18 @@ void garage_init(void) {
     .pull_down_en = GPIO_PULLDOWN_DISABLE,
     .intr_type = GPIO_INTR_DISABLE,
   };
+  gpio_config_t sensor_pins = {
+    .pin_bit_mask = GPIO_SEL_(GARAGE_OPEN_SENSOR_PIN) | GPIO_SEL_(GARAGE_CLOSED_SENSOR_PIN),
+    .mode = GPIO_MODE_INPUT,
+    .pull_up_en = GPIO_PULLUP_ENABLE,
+    .pull_down_en = GPIO_PULLDOWN_DISABLE,
+    .intr_type = GPIO_INTR_DISABLE,
+  };
 
-  gpio_set_direction(GARAGE_OPEN_SENSOR_PIN, GPIO_MODE_INPUT);
-  gpio_pullup_en(GARAGE_OPEN_SENSOR_PIN);
-
-  gpio_set_direction(GARAGE_CLOSED_SENSOR_PIN, GPIO_MODE_INPUT);
-  gpio_pullup_en(GARAGE_CLOSED_SENSOR_PIN);
-
+  gpio_config(&sensor_pins);
   gpio_config(&control_pins);
   gpio_set_level(GARAGE_OPEN_CONTROL_PIN, 1);
   gpio_set_level(GARAGE_CLOSE_CONTROL_PIN, 1);
-
-  //gpio_set_direction(GARAGE_OPEN_CONTROL_PIN, GPIO_MODE_INPUT); // open drain
-  //gpio_pullup_en(GARAGE_OPEN_CONTROL_PIN);
-
-  //gpio_set_direction(GARAGE_CLOSE_CONTROL_PIN, GPIO_MODE_INPUT); // open drain
-  //gpio_pullup_en(GARAGE_CLOSE_CONTROL_PIN);
 
   gpio_set_level(GARAGE_STATUS_LED_PIN, 0);
   gpio_set_direction(GARAGE_STATUS_LED_PIN, GPIO_MODE_OUTPUT);
@@ -148,7 +145,6 @@ static void stuck_timer_callback(void* arg) {
 /******************************************************************
  * 
  */
-static garage_state_t target_state = GARAGE_OPEN;
 static void set_target_state(garage_state_t state) {
   target_state = state;
 }
