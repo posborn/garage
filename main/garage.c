@@ -12,8 +12,13 @@
 #include "wifi.h"
 #include "garage_control.h"
 
+#include "syslog.h"
+#include "heartbeat.h"
+
 #define ALLOW_REMOTE_OPEN
 #define ALLOW_REMOTE_CLOSE
+
+static const char* TAG = "HomekitGarage"; // for ESP32 logging
 
 void on_wifi_ready();
 
@@ -88,8 +93,8 @@ void led_identify_task(void *_args) {
 }
 
 void garage_identify(homekit_value_t _value) {
-    printf("Garage identify\n");
-    xTaskCreate(led_identify_task, "LED identify", 512, NULL, 2, NULL);
+  ESP_LOGI(__FUNCTION__, "Garage identify");
+  xTaskCreate(led_identify_task, "LED identify", 512, NULL, 2, NULL);
 }
 
 homekit_value_t garage_current_get(void) {
@@ -115,7 +120,7 @@ homekit_value_t garage_target_get(void) {
 
 void garage_target_set(homekit_value_t value) {
     if (value.format != homekit_format_uint8) {
-        printf("Invalid value format: %d\n", value.format);
+      ESP_LOGE(__FUNCTION__, "Invalid value format: %d", value.format);
         return;
     }
 
@@ -137,7 +142,7 @@ void garage_target_set(homekit_value_t value) {
 #endif
       break;
     default:
-      printf("%s: Unknown value %i\n", __func__, value.int_value);
+      ESP_LOGE(__FUNCTION__, "%s: Unknown value %i", __func__, value.int_value);
       break;
     }
 }
@@ -193,8 +198,10 @@ void app_main(void) {
     }
     ESP_ERROR_CHECK( ret );
 
-    //    printf("Calling wifi init\n");
+    ESP_LOGI(__FUNCTION__, "System startup");
     wifi_init();
+    syslog_init();
+    heartbeat_init(30);
     garage_init();
     garage_set_state_callback(garage_state_callback);
 }

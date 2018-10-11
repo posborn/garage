@@ -78,7 +78,7 @@ void garage_init(void) {
   esp_timer_create(&sensor_pin_timer_args, &sensor_pin_timer);
   esp_timer_create(&stuck_timer_args, &stuck_timer);
   esp_timer_start_periodic(sensor_pin_timer, GARAGE_SENSOR_POLL_MILLISECONDS);
-  printf("Completed garage_init\n");
+  ESP_LOGI(__FUNCTION__, "Completed garage_init");
 }
 
 void garage_set_state_callback(garage_state_callback_t fn) {
@@ -99,7 +99,7 @@ static bool garage_is_closed(void) {
 }
 
 void garage_action_open(void) {
-  printf("*** OPENING GARAGE\n");
+  ESP_LOGI(__FUNCTION__, "*** OPENING GARAGE");
   gpio_set_direction(GARAGE_OPEN_CONTROL_PIN, GPIO_MODE_OUTPUT);
   gpio_set_level(GARAGE_OPEN_CONTROL_PIN, 0);
   esp_timer_stop(control_pin_timer);
@@ -108,7 +108,7 @@ void garage_action_open(void) {
 }
 
 void garage_action_close(void) {
-  printf("*** CLOSING GARAGE\n");
+  ESP_LOGI(__FUNCTION__, "*** CLOSING GARAGE");
   gpio_set_direction(GARAGE_CLOSE_CONTROL_PIN, GPIO_MODE_OUTPUT);
   gpio_set_level(GARAGE_CLOSE_CONTROL_PIN, 0);
   esp_timer_stop(control_pin_timer);
@@ -139,7 +139,7 @@ static void stop_stuck_timer(void) {
 }
 static void stuck_timer_callback(void* arg) {
   door_is_stuck = true;
-  printf("*** DOOR MAY BE STUCK\n");
+  ESP_LOGW(__FUNCTION__, "*** DOOR MAY BE STUCK");
   set_current_state(GARAGE_STOPPED);
 }
 
@@ -170,7 +170,8 @@ static void set_current_state(garage_state_t state) {
   default:
     break;
   }
-  printf("NEW STATE: %s => %s\n", STATE_STR(current_state), STATE_STR(target_state));
+  ESP_LOGI(__FUNCTION__, "NEW STATE: %s => %s", STATE_STR(current_state),
+	   STATE_STR(target_state));
   if (garage_state_callback) garage_state_callback(current_state, target_state);
 }
 static bool door_was_open(void) {
